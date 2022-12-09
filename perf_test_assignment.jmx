@@ -14,12 +14,12 @@
     <hashTree>
       <kg.apc.jmeter.threads.UltimateThreadGroup guiclass="kg.apc.jmeter.threads.UltimateThreadGroupGui" testclass="kg.apc.jmeter.threads.UltimateThreadGroup" testname="Category Details" enabled="true">
         <collectionProp name="ultimatethreadgroupdata">
-          <collectionProp name="-1316098835">
-            <stringProp name="53">5</stringProp>
+          <collectionProp name="-496496018">
+            <stringProp name="326661495">${__P(threads,5)}</stringProp>
             <stringProp name="0">0</stringProp>
-            <stringProp name="53">5</stringProp>
-            <stringProp name="60">60</stringProp>
-            <stringProp name="53">5</stringProp>
+            <stringProp name="138323129">${__P(rampup,5)}</stringProp>
+            <stringProp name="1726427159">${__P(duration,60)}</stringProp>
+            <stringProp name="138323129">${__P(rampup,5)}</stringProp>
           </collectionProp>
         </collectionProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller" enabled="true">
@@ -45,7 +45,7 @@
           <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables" enabled="true">
             <collectionProp name="Arguments.arguments"/>
           </elementProp>
-          <stringProp name="HTTPSampler.domain">api.tmsandbox.co.nz</stringProp>
+          <stringProp name="HTTPSampler.domain">${__P(url,api.tmsandbox.co.nz)}</stringProp>
           <stringProp name="HTTPSampler.port"></stringProp>
           <stringProp name="HTTPSampler.protocol">https</stringProp>
           <stringProp name="HTTPSampler.contentEncoding"></stringProp>
@@ -73,11 +73,7 @@
         </HeaderManager>
         <hashTree/>
         <ConstantThroughputTimer guiclass="TestBeanGUI" testclass="ConstantThroughputTimer" testname="Constant Throughput Timer" enabled="true">
-          <doubleProp>
-            <name>throughput</name>
-            <value>600.0</value>
-            <savedValue>0.0</savedValue>
-          </doubleProp>
+          <stringProp name="throughput">${__jexl3(${__P(throughput,10)}*60,)}</stringProp>
           <intProp name="calcMode">2</intProp>
         </ConstantThroughputTimer>
         <hashTree/>
@@ -104,7 +100,103 @@
             <stringProp name="HTTPSampler.connect_timeout"></stringProp>
             <stringProp name="HTTPSampler.response_timeout"></stringProp>
           </HTTPSamplerProxy>
-          <hashTree/>
+          <hashTree>
+            <JSR223Assertion guiclass="TestBeanGUI" testclass="JSR223Assertion" testname="JSR223 Assertion" enabled="true">
+              <stringProp name="scriptLanguage">groovy</stringProp>
+              <stringProp name="parameters"></stringProp>
+              <stringProp name="filename"></stringProp>
+              <stringProp name="cacheKey">true</stringProp>
+              <stringProp name="script">import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.FileUtils
+import java.text.SimpleDateFormat;
+
+
+log.info(&quot;Thread group name is &quot;+ prev.getThreadName());
+
+def errorMessage=&quot;&quot;;
+def expectedResponseCode=&quot;200&quot;;
+
+// extract response code from response
+def actualResponseCode=prev.getResponseCode();
+
+
+// if a successfull reponse is received with status code 200
+if(actualResponseCode==expectedResponseCode)
+{
+
+	// Assert 1 - response status code	
+	log.info(&quot;Received a succesfull response and status code is: &quot;+actualResponseCode);
+
+
+	// extract responsedata into a json response
+	def jsonResponse = new groovy.json.JsonSlurper().parse(prev.getResponseData())
+
+
+	// extract categoryID and canRelist parameter values from json response
+	def categoryID =jsonResponse.CategoryId;
+	def canRelist = jsonResponse.CanRelist;
+	
+	
+	// Assert 2 - Parameter Check --&gt; Category ID and Text Check --&gt; &quot;CanRelist&quot;: true
+	if (!jsonResponse.keySet().contains(&apos;CategoryId&apos;)) 
+	{
+		AssertionResult.setFailure(true);
+    		AssertionResult.setFailureMessage(&apos;&quot;CategoryId&quot; element was not found&apos;);
+	}
+
+	else if(jsonResponse.CanRelist.equals(false))
+	{
+		AssertionResult.setFailure(true);
+    		AssertionResult.setFailureMessage(&apos;&quot;CanRelist&quot; value was not true&apos;);
+	}
+
+
+	// extract name ,path, promotionID and price parameter values from response data
+	def name= jsonResponse.Name;
+	def path= jsonResponse.Path;
+	def promotionID= jsonResponse.Promotions;
+	def price =jsonResponse.Price;
+	
+	
+	// create a new file to save data which can be append
+
+	f = new FileOutputStream(&quot;response_data.csv&quot;, true);
+	p = new PrintStream(f);
+
+
+	// print the relevant the values into the file
+	if(promotionID.equals(null))
+	{
+	    log.info(&quot;promotion id is null&quot;);
+		p.print(categoryID+&quot;,&quot;+name+ &quot;,&quot;+path+&quot;\n&quot;);
+	}
+	else {
+	    log.info(&quot;promotion id is not null&quot;);
+		for( int i=0; i&lt; promotionID.Id.size; i++) 
+		{
+			p.print(categoryID+&quot;,&quot;+name+ &quot;,&quot;+path+ &quot;,&quot;+promotionID.Id[i]+&quot;,&quot;+promotionID.Price[i]+&quot;\n&quot;);
+		}
+	}
+	
+	p.close();
+	f.close();
+
+}
+
+
+
+else	
+{
+	errorMessage += &quot;Extected response code: [&quot; + expectedResponseCode+ &quot;] but we got response code [&quot; + actualResponseCode + &quot;]&quot;;
+	AssertionResult.setFailure(true);
+	AssertionResult.setFailureMessage(errorMessage);
+	
+}
+
+</stringProp>
+            </JSR223Assertion>
+            <hashTree/>
+          </hashTree>
         </hashTree>
       </hashTree>
     </hashTree>
