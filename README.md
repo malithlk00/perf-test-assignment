@@ -3,11 +3,11 @@
 
 ## Project Structure
 
-perf_test_assignment.jmx - main JMeter script to execute
-data.csv - test raw data file used in JMeter script
-octo_perf_execution.pdf - test results report generated from www.octoperf.com
-local_report.zip - test results report generated from a local machine
-grafana_influxdb_report.pdf - test results report generated from grafana dashboard
+- perf_test_assignment.jmx - main JMeter script to execute
+- data.csv - test raw data file used in JMeter script
+- octo_perf_execution.pdf - test results report generated from www.octoperf.com
+- local_report.zip - test results report generated from a cloud vm
+- grafana_influxdb_report.pdf - test results report generated from grafana dashboard
 
 ## Tools and tech stack:
 
@@ -30,35 +30,36 @@ grafana_influxdb_report.pdf - test results report generated from grafana dashboa
 
 ### Run tests
 
-Get a clone from the [repository](https://github.com/malithlk00/perf-test-assignment) 
+1. Get a clone from the [repository](https://github.com/malithlk00/perf-test-assignment) 
 
-Copy the perf_test_assignment.jmx and data.csv files into bin folder of JMeter exracted folder
+2. Copy the perf_test_assignment.jmx and data.csv files into bin folder of JMeter exracted folder
 
-Enable and update following properties in user.properties file located inside bin folder
+3. Enable and update following properties in user.properties file located inside bin folder
 - jmeter.reportgenerator.overall_granularity=1000
 - jmeter.reportgenerator.graph.custom_mm_hit.property.set_granularity=${jmeter.reportgenerator.overall_granularity}
 
-Open a comman-prompt inside the bin folder and run follownig command
+4. Open a comman-prompt inside the bin folder and run follownig command
 ~~~ssh
 jmeter -n -t perf_test_assignment.jmx -l results_all.csv -Jthreads=5 -Jrampup=5 -Jduration=60 -Jthroughput=10 -Jurl=api.tmsandbox.co.nz -e -o reports
 ~~~
 
 
-- results_all.csv : raw log data file for reporting purpose
-- reports : folder to save JMeter html dashboard results
-- threads : parameter for vuser count (default to set as 5)
-- rampup : ramp up time for users (default to set as 5)
-- duration : steady state time (default to set as 60 seconds)
-- throughput : requests per second (default to set as 10)
-- url : base url of the request without (default to set as api.tmsandbox.co.nz)
+- *results_all.csv* : raw log data file for reporting purpose
+- *reports* : folder to save JMeter html dashboard results
+- *threads* : parameter for vuser count (default to set as 5)
+- *rampup* : ramp up time for users (default to set as 5)
+- *duration* : steady state time (default to set as 60 seconds)
+- *throughput* : requests per second (default to set as 10)
+- *url* : base url of the request without (default to set as api.tmsandbox.co.nz)
 
 
-Configure Grafana dashboard:
-i. Install docker and docker compose
-ii. Clone the [repository](https://github.com/testsmith-io/jmeter-influxdb-grafana-docker) and execute docker-compose.yml file
-iii. Once relavant docker containers are created, start both of them
-iv. In the perf_test_assignment.jmx script, enable backend listner and execute the test
-v. open url localhost:3000 in browser and navigate to JMeter dashboard to view results
+## Configure Grafana dashboard:
+
+- Install docker and docker compose
+- Clone the [repository](https://github.com/testsmith-io/jmeter-influxdb-grafana-docker) and execute docker-compose.yml file
+- Once relavant docker containers are created, start both of them
+- In the perf_test_assignment.jmx script, enable backend listner and execute the test
+- open url localhost:3000 in browser and navigate to JMeter dashboard to view results
 
 
 
@@ -152,6 +153,7 @@ JMeter 5.5.0 was used to conduct the performance testing.
 ****Below results are taken from the execution done in Azure Cloud VM****
 
 ### 5.1 Verifications
+------
 #### NFR-01 and NFR-02 :
 
 There are 10 category IDs in data.csv file and half of the count (5) is used as vusers. Ramp up time is also given as 5 so that each vuser is ramped up in one second
@@ -159,7 +161,7 @@ There are 10 category IDs in data.csv file and half of the count (5) is used as 
 
 ![image](https://user-images.githubusercontent.com/4869284/206779819-5bc68dc7-1331-472e-8ca8-e47aad63dcb1.png)
 
-
+-------
 #### NFR-03 : 
 
 Throughput is approximately 10 hits per second
@@ -169,11 +171,14 @@ Throughput is approximately 10 hits per second
 this was configured by using constant throughput timer
 ![image](https://user-images.githubusercontent.com/4869284/206780604-a25323f5-b54e-4185-9287-83b0449089cc.png)
 
+------
 #### NFR-04	:
 
 As shown in below, 90th percentile response time is below 500ms
 
 ![image](https://user-images.githubusercontent.com/4869284/206780398-d2350336-1e6e-4f91-8707-76e8903bc771.png)
+
+*** Above results can be found in local_report.zip ***
 
 ### 5.2 Observations
 
